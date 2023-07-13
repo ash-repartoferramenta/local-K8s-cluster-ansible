@@ -1,0 +1,63 @@
+
+#Kubernetes Kubeadm Cluster
+
+#Vagrant API
+VAGRANTFILE_API_VERSION = '2'
+IPSTART = 10
+VNETWORK = "192.168.60."
+NODESNUMBER = 2
+VCLUSTERIPS = Array.new
+i = 1
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+   # General config
+   config.vm.box = "generic/centos9s"
+   config.ssh.insert_key = false
+
+   config.vm.provider :virtualbox do |v|
+    v.cpus = 1
+    v.memory = 2048
+    v.linked_clone = true
+    v.customize ["modifyvm", :id, "--ioapic", "on"]
+  end
+
+   
+   # Create master node
+   config.vm.define "master" do |master|
+    master.vm.hostname = "master"
+    master.vm.network "private_network", ip: "#{VNETWORK}#{IPSTART}"
+    master.vm.provider :virtualbox do |v|
+        v.customize ["modifyvm", :id, "--cpus", "2"]  
+        v.customize ["modifyvm", :id, "--memory", "2048"]
+      end
+    end
+
+   # Loop until all VMs specified in NODESNUMBER are created
+  (i..NODESNUMBER).each do |machine_id|
+      config.vm.define "k8snode#{machine_id}" do |machine|
+        machine.vm.hostname = "k8snode#{machine_id}"
+        machine.vm.network "private_network", ip: "#{VNETWORK}#{IPSTART + machine_id}"
+        VCLUSTERIPS.append("#{VNETWORK}#{IPSTART + machine_id}") 
+ 
+        
+   # When it's done start Ansible provisioning
+
+   if machine_id == NODESNUMBER
+      machine.vm.provision :ansible do |ansible|
+      ansible.limit = "all"
+      ansible.playbook = "../site.yml"
+      ansible.extra_vars = {
+        clusterips: VCLUSTERIPS,
+       }
+      ansible.groups = {
+        "controlplane"  => ["master"] ,
+        "workernodes" => ["k8snode[1:#{NODESNUMBER}]"]
+      }
+      end
+     end
+    end
+  end
+end
+
+
+

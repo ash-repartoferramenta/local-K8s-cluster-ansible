@@ -1,0 +1,22 @@
+---
+- name: Adding Kubernetes repository
+  ansible.builtin.copy:
+    dest: /etc/yum.repos.d/
+    src: ../files/kubernetes.repo
+    mode: 0644
+
+- name: Kubernetes installation
+  ansible.builtin.yum:
+    name: "{{item}}"
+    state: present
+    disable_excludes: kubernetes
+  with_items:
+    - kubelet
+    - kubeadm
+    - kubectl
+
+- name: Enable Kubernetes service
+  ansible.builtin.service:
+    name: kubelet
+    enabled: true
+    state: started

@@ -1,0 +1,20 @@
+---
+- name: Kubernetes cluster deploy
+  hosts: all
+  roles:
+    - role: containerd
+      become: yes
+    - role: kubernetes
+      become: yes
+    - role: crictl
+      become: yes
+- name: Controlplane initialization
+  hosts: controlplane
+  roles:
+    - role: controlplane
+      become: yes    
+#  roles:
+#    - role: webtier
+#      become: yes
+#    - role: wordpress
+#      become: yes

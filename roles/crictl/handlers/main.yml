@@ -1,0 +1,5 @@
+---
+- name: crictl cleanup
+  ansible.builtin.file:
+    path: "/usr/local/bin/crictl-v{{clicrtllastv}}-linux-amd64.tar.gz"
+    state: absent

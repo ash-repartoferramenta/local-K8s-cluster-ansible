@@ -1,0 +1,29 @@
+---
+- name: Allow Kubernetes controlplane through firewall
+  ansible.posix.firewalld:
+    service: kube-control-plane
+    state: enabled
+    permanent: true
+    immediate: true
+
+
+- name: Disable swap
+  ansible.builtin.command: "swapoff -a"
+
+#- name: Kubeadm init
+#  ansible.builtin.command: "kubeadm init --pod-network-cidr {{cpnetcidr}}"
+
+- name: Create directory for config
+  ansible.builtin.file:
+    path: "$Home/.kube"
+    state: directory
+    mode: 0744
+
+- name: Copiyng config
+  ansible.builtin.copy:
+    src: "/etc/kubernetes/admin.conf"
+    dest: "$HOME/.kube/config"
+    owner: root
+    group: root
+    mode: preserve
+    remote_src: true
