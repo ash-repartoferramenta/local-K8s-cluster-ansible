@@ -1,0 +1,4 @@
+---
+- name: Join nodes to cluster
+  ansible.builtin.shell: "{{joincmd }}"
+#  ansible.builtin.command: "{{joincmd}}"
