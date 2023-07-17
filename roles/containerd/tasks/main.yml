@@ -6,6 +6,7 @@
   with_items:
     - overlay
     - br_netfilter
+
 - name: Setting kernel parameters for Kubernetes networking
   ansible.builtin.copy:
     dest: /etc/sysctl.d/
@@ -21,9 +22,18 @@
     name: containerd.io
     state: present
 
+- name: Enable containerd
+  ansible.builtin.service:
+    name: containerd
+    state: started
+    enabled: yes
+
 - name: Configuring containerd
   ansible.builtin.copy:
     dest: /etc/containerd/config.toml
     src: ../files/config.toml
     mode: 0644
   notify: Restart containerd
+
+- name: Force configuration apply
+  ansible.builtin.meta: flush_handlers
