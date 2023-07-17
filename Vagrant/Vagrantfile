@@ -9,6 +9,15 @@ NODESNUMBER = 2
 VCLUSTERIPS = Array.new
 i = 1
 
+$hostsconfig = <<-SCRIPT
+
+#Disable swap permanently
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
+IPADDR=`ip -4 address show dev eth1 | grep inet | awk '{print $2}' | cut -f1 -d/`
+echo $IPADDR $HOSTNAME >> /etc/hosts
+echo 127.0.0.1 $HOSTNAME >> /etc/hosts
+SCRIPT
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
    # General config
    config.vm.box = "generic/centos9s"
@@ -26,6 +35,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
    config.vm.define "master" do |master|
     master.vm.hostname = "master"
     master.vm.network "private_network", ip: "#{VNETWORK}#{IPSTART}"
+    VCLUSTERIPS.append("#{VNETWORK}#{IPSTART}") 
+    master.vm.provision :shell, inline: $hostsconfig
     master.vm.provider :virtualbox do |v|
         v.customize ["modifyvm", :id, "--cpus", "2"]  
         v.customize ["modifyvm", :id, "--memory", "2048"]
@@ -38,8 +49,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         machine.vm.hostname = "k8snode#{machine_id}"
         machine.vm.network "private_network", ip: "#{VNETWORK}#{IPSTART + machine_id}"
         VCLUSTERIPS.append("#{VNETWORK}#{IPSTART + machine_id}") 
- 
-        
+        machine.vm.provision :shell, inline: $hostsconfig
+    
+
    # When it's done start Ansible provisioning
 
    if machine_id == NODESNUMBER
@@ -47,7 +59,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       ansible.limit = "all"
       ansible.playbook = "../site.yml"
       ansible.extra_vars = {
-        clusterips: VCLUSTERIPS,
+        clusterips: VCLUSTERIPS
        }
       ansible.groups = {
         "controlplane"  => ["master"] ,
