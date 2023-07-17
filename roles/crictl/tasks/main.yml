@@ -4,7 +4,7 @@
     url:  "https://github.com/kubernetes-sigs/cri-tools/releases/download/v{{clicrtllastv}}/crictl-v{{clicrtllastv}}-linux-amd64.tar.gz"
     dest: /usr/local/bin
 
-- name: Untar wordpress
+- name: Untar Crictl
   ansible.builtin.unarchive:
     dest: /usr/local/bin/
     src: "/usr/local/bin/crictl-v{{clicrtllastv}}-linux-amd64.tar.gz"
