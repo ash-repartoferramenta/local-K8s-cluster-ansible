@@ -6,20 +6,25 @@
     permanent: true
     immediate: true
 
+# Try add idempotency, check if cluster is online or not in someway
 
-- name: Disable swap
-  ansible.builtin.command: "swapoff -a"
+- name: Kubeadm init
+  ansible.builtin.command: "kubeadm init --apiserver-advertise-address={{clusterips.0}} --pod-network-cidr {{cpnetcidr}}" #10.244.0.0/16
+  ignore_errors: true
 
-#- name: Kubeadm init
-#  ansible.builtin.command: "kubeadm init --pod-network-cidr {{cpnetcidr}}"
+- name: Get join string
+  ansible.builtin.shell: "kubeadm token create --print-join-command"
+  register: join_command
+
+#as root export KUBECONFIG=/etc/kubernetes/admin.conf
 
 - name: Create directory for config
   ansible.builtin.file:
-    path: "$Home/.kube"
+    path: "$HOME/.kube"
     state: directory
     mode: 0744
 
-- name: Copiyng config
+- name: Copying config
   ansible.builtin.copy:
     src: "/etc/kubernetes/admin.conf"
     dest: "$HOME/.kube/config"
@@ -27,3 +32,19 @@
     group: root
     mode: preserve
     remote_src: true
+
+
+- name: Pass join token to nodes
+  ansible.builtin.set_fact:
+    joincmd: "{{join_command.stdout}}"
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  with_items: "{{ groups['workernodes'] }}"
+
+- name: Copy flannel CNI config
+  ansible.builtin.copy:
+    src: ../files/flannelcfg.yml
+    dest: /tmp/
+
+- name: Instaling CNI.
+  command: kubectl apply -f /tmp/flannelcfg.yml
