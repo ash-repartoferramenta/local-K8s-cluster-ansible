@@ -1,5 +1,4 @@
-# Automate the deploy of a simple Galera Cluster running on Centos 9 Stream
-
+# Kubernetes cluster deploy using Kubeadm, Ansible and Vagrant
 ## Before we begin
 **Requirements**
 - HashiCorp Vagrant for building and deploying virtual inftractructures
