@@ -8,13 +8,18 @@
       become: yes
     - role: crictl
       become: yes
+
 - name: Controlplane initialization
   hosts: controlplane
+  vars:
+    stdout_callback: yaml
   roles:
     - role: controlplane
-      become: yes    
-#  roles:
-#    - role: webtier
-#      become: yes
-#    - role: wordpress
-#      become: yes
+      become: yes
+- name: Joining nodes
+  hosts: workernodes
+  roles:
+    - role: workernode
+      become: yes
+
+
