@@ -21,5 +21,15 @@
     enabled: true
     state: started
 
-- name: Disable swap
+- name: Disable swap for installation
   ansible.builtin.command: "swapoff -a"
+
+- name: Remove swap permanently
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp:  '/dev/mapper/{{item}}-swap'
+    replace: '#/dev/mapper/{{item}}-swap'
+  with_items:
+    - centos9s
+    - centos8s
+
