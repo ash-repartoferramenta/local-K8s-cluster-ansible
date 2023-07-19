@@ -6,11 +6,16 @@
     permanent: true
     immediate: true
 
-# Try add idempotency, check if cluster is online or not in someway
+- name: Check if cluster is already initialised
+  ansible.builtin.command: kubectl cluster-info
+  register: initcheck
+  failed_when: initcheck.rc == -5
+
 
 - name: Kubeadm init
   ansible.builtin.command: "kubeadm init --apiserver-advertise-address={{clusterips.0}} --pod-network-cidr {{cpnetcidr}}" #10.244.0.0/16
-  ignore_errors: true
+  when: initcheck.rc != 0
+  
 
 - name: Get join string
   ansible.builtin.shell: "kubeadm token create --print-join-command"
