@@ -14,8 +14,14 @@
     mode: 0644
   notify: Reload systemctl 
 
+- name: Check if kubernetes repository is already available
+  ansible.builtin.command:  ls /etc/yum.repos.d/
+  register: repopresent
+  changed_when: "'kubernetes.repo' not in repopresent.stdout"
+
 - name: Add repository
   shell: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  when: "'kubernetes.repo' not in repopresent.stdout"
 
 - name: Containerd installation
   ansible.builtin.yum:
