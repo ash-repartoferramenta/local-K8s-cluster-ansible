@@ -1,4 +1,5 @@
-# Kubernetes cluster deploy using Kubeadm, Ansible and Vagrant
+# Deploy a simple Kubernetes cluster using Kubeadm, vagrant and Ansible
+
 ## Before we begin
 **Requirements**
 - HashiCorp Vagrant for building and deploying virtual inftractructures
@@ -13,6 +14,12 @@ The following project has been realised for training and learning purpose and th
 please review the code carefully before utilizing it for any other scope.
 
 ## Implementation description
+
+
+![ansible-k8s](https://github.com/ash-repartoferramenta/local-K8s-cluster-ansible/assets/135543207/36a42bac-8406-4a1d-a74f-6c04e112b3ae)
+
+
+The following playbook deploy a kubernetes cluster using Kubeadm, Containerd and Flannel as CNI
 
 
 ## Vagrant
