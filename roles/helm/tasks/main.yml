@@ -1,0 +1,16 @@
+---
+- name: Install git
+  ansible.builtin.yum:
+    name: git
+    state: present
+  become: yes
+
+- name: Download latest Helm binaries
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: $HOME/
+    mode: 0700
+  register: installerpath
+
+- name: Install Helm binaries
+  ansible.builtin.command: "{{installerpath.dest}}"
