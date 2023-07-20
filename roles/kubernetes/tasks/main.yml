@@ -24,6 +24,11 @@
 - name: Disable swap for installation
   ansible.builtin.command: "swapoff -a"
 
+- name: Check if swap is already disabled
+  ansible.builtin.command: cat /etc/fstab
+  register: fstab
+  
+
 - name: Remove swap permanently
   ansible.builtin.replace:
     path: /etc/fstab
@@ -32,4 +37,4 @@
   with_items:
     - centos9s
     - centos8s
-
+  when: '"#/dev/mapper/centos9s-swap" not in fstab.stdout' 
