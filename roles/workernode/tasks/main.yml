@@ -3,13 +3,8 @@
   ansible.builtin.command: curl http://localhost:10248/healthz
   register: joinok
   failed_when: joinok.rc == -5
-  ignore_errors: true
   
-#- name: debug initcheck.rc
-#  ansible.builtin.debug:
-#    var: joinok
-  
-
 - name: Join nodes to cluster
   ansible.builtin.shell: "{{joincmd }}"
   when: joinok.stdout != 'ok'
+  become: yes
