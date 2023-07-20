@@ -5,40 +5,45 @@
     state: enabled
     permanent: true
     immediate: true
+  become: yes
 
 - name: Check if cluster is already initialised
-  ansible.builtin.command: kubectl cluster-info
+  ansible.builtin.command: "kubectl cluster-info --kubeconfig=/etc/kubernetes/admin.conf"
   register: initcheck
   failed_when: initcheck.rc == -5
+  become: yes
+ 
 
+- name: Debug initcheck
+  ansible.builtin.debug:
+    var: initcheck.rc
 
 - name: Kubeadm init
-  ansible.builtin.command: "kubeadm init --apiserver-advertise-address={{clusterips.0}} --pod-network-cidr {{cpnetcidr}}" #10.244.0.0/16
+  ansible.builtin.command: "kubeadm init --apiserver-advertise-address={{clusterips.0}} --pod-network-cidr {{cpnetcidr}}" 
   when: initcheck.rc != 0
-  
+  become: yes
+  ignore_errors: True
 
 - name: Get join string
   ansible.builtin.shell: "kubeadm token create --print-join-command"
   register: join_command
-
-#as root export KUBECONFIG=/etc/kubernetes/admin.conf
+  become: yes
 
 - name: Create directory for config
   ansible.builtin.file:
-    path: "$HOME/.kube"
+    path: $HOME/.kube
     state: directory
-    mode: 0744
+    mode: 0755
 
-- name: Copying config
-  ansible.builtin.copy:
-    src: "/etc/kubernetes/admin.conf"
-    dest: "$HOME/.kube/config"
-    owner: root
-    group: root
-    mode: preserve
-    remote_src: true
-
-
+- name: Symlink the kubectl admin.conf to ~/.kube/conf.
+  file:
+    src: /etc/kubernetes/admin.conf
+    dest: ~{{ ansible_ssh_user }}/.kube/config
+    state: link
+    mode: 0644
+    owner: "{{ ansible_ssh_user }}"
+    group: "{{ ansible_ssh_user }}"
+  become: yes
 - name: Pass join token to nodes
   ansible.builtin.set_fact:
     joincmd: "{{join_command.stdout}}"
@@ -51,5 +56,6 @@
     src: ../files/flannelcfg.yml
     dest: /tmp/
 
-- name: Instaling CNI.
-  command: kubectl apply -f /tmp/flannelcfg.yml
+- name: Instaling CNI
+  shell: "kubectl apply -f /tmp/flannelcfg.yml --kubeconfig=/etc/kubernetes/admin.conf"
+  become: yes
